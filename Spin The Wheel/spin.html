@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Spin the Wheel — Force Winner</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .wheel-container {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  margin-bottom: 30px;
+}
+
+.wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 6px solid #fff;
+  transition: transform 5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  background: conic-gradient(
+    #ff8a65 0deg 32.72deg,
+    #ffd54f 32.72deg 65.45deg,
+    #81c784 65.45deg 98.18deg,
+    #64b5f6 98.18deg 130.9deg,
+    #ba68c8 130.9deg 163.63deg,
+    #4db6ac 163.63deg 196.36deg,
+    #f06292 196.36deg 229.09deg,
+    #9575cd 229.09deg 261.81deg,
+    #4fc3f7 261.81deg 294.54deg,
+    #aed581 294.54deg 327.27deg,
+    #ffb74d 327.27deg 360deg
+  );
+  position: relative;
+}
+
+.label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 0 0;
+  font-size: 13px;
+  font-weight: bold;
+  color: #000;
+  text-shadow: 1px 1px 2px white;
+  pointer-events: none;
+}
+
+.pointer {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 30px solid yellow;
+  z-index: 10;
+}
+
+.controls {
+  margin-top: 20px;
+}
+
+select, button {
+  padding: 8px 12px;
+  margin-right: 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  background: #22c55e;
+  color: white;
+  cursor: pointer;
+}
+
+.result {
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+    <h2>🎯 Spin the Wheel — Choose Your Winner</h2>
+    <div class="wheel-container">
+        <div class="wheel" id="wheel"></div>
+        <div class="pointer"></div>
+    </div>
+    <div class="controls"> <label for="winnerSelect">Choose winner:</label> <select id="winnerSelect"></select> <button
+            onclick="spin()">Spin</button> </div>
+    <div class="result" id="result">Waiting to spin...</div>
+    <script> const participants = ["Alice", "Bob", "Charlie", "Diana", "Ethan", "Fiona", "George", "Hannah", "Ivan", "Julia", "Kevin"]; const wheel = document.getElementById("wheel"); const resultBox = document.getElementById("result"); const winnerSelect = document.getElementById("winnerSelect"); const sliceAngle = 360 / participants.length; // Populate dropdown participants.forEach((name, i) => { const opt = document.createElement("option"); opt.value = i; opt.textContent = name; winnerSelect.appendChild(opt); }); // Add labels to wheel participants.forEach((name, i) => { const angle = sliceAngle * i; const label = document.createElement("div"); label.className = "label"; label.textContent = name; const radius = 140; const radians = (angle - 90) * Math.PI / 180; const x = radius * Math.cos(radians); const y = radius * Math.sin(radians); label.style.transform = `translate(${x}px, ${y}px) rotate(${angle}deg)`; wheel.appendChild(label); }); let currentRotation = 0; function spin() { const targetIndex = parseInt(winnerSelect.value); const extraSpins = 5; const angleToCenter = 360 - (targetIndex * sliceAngle + sliceAngle / 2); const totalRotation = extraSpins * 360 + angleToCenter; currentRotation += totalRotation; wheel.style.transform = `rotate(${currentRotation}deg)`; resultBox.textContent = "Spinning..."; setTimeout(() => { resultBox.textContent = `🎉 Winner: ${participants[targetIndex]} 🎉`; }, 5100); } </script>
+</body>
+
+</html>
