@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Real-Time Slow + Reverb</title>
+<style>
+  body { background:#0a0a0a; color:#fff; font-family:sans-serif; text-align:center; }
+  canvas { width:100%; height:100px; }
+</style>
+</head>
+<body>
+<canvas id="vis"></canvas>
+<script>
+let ctx, src, gain, reverb, analyser, buffer, playing=false;
+let speed=1, reverbOn=false;
+
+async function loadAudio(url){
+  ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const r = await fetch(url);
+  const b = await r.arrayBuffer();
+  buffer = await ctx.decodeAudioData(b);
+  setupVis();
+}
+
+function playPause(){
+  if(playing){ src.stop(); playing=false; return; }
+  src = ctx.createBufferSource(); src.buffer = buffer;
+  gain = ctx.createGain(); analyser = ctx.createAnalyser(); reverb = ctx.createConvolver();
+  src.playbackRate.value = speed;
+  let dest = ctx.destination;
+  if(reverbOn){
+    reverb.buffer = impulse();
+    src.connect(reverb).connect(gain).connect(analyser).connect(dest);
+  }else{
+    src.connect(gain).connect(analyser).connect(dest);
+  }
+  src.start(); playing=true;
+  src.onended = ()=>playing=false;
+}
+
+function impulse(){
+  const len = ctx.sampleRate*2;
+  const imp = ctx.createBuffer(2,len,ctx.sampleRate);
+  for(let c=0;c<2;c++){
+    const ch = imp.getChannelData(c);
+    for(let i=0;i<len;i++){ ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,3); }
+  }
+  return imp;
+}
+
+function toggleReverb(){ reverbOn=!reverbOn; if(playing){ src.stop(); playPause(); } }
+function setSpeed(v){ speed=v; if(playing){ src.playbackRate.value=v; } }
+
+// Simple visualizer
+function setupVis(){
+  const canvas=document.getElementById("vis"); const c=canvas.getContext("2d");
+  analyser = ctx.createAnalyser(); analyser.fftSize=256;
+  const data=new Uint8Array(analyser.frequencyBinCount);
+  function draw(){
+    requestAnimationFrame(draw);
+    if(!analyser) return;
+    analyser.getByteFrequencyData(data);
+    c.fillStyle="#000"; c.fillRect(0,0,canvas.width,canvas.height);
+    const barW=canvas.width/data.length;
+    data.forEach((v,i)=>{ const h=v/2; c.fillStyle=`hsl(${i},100%,50%)`; c.fillRect(i*barW,canvas.height-h,barW-2,h); });
+  }
+  draw();
+}
+
+// Listen for Thunkable messages
+window.addEventListener("message",(e)=>{
+  const d=e.data;
+  if(d.command==="load") loadAudio(d.url);
+  if(d.command==="play") playPause();
+  if(d.command==="reverb") toggleReverb();
+  if(d.command==="speed") setSpeed(d.value);
+});
+</script>
+</body>
+</html>
